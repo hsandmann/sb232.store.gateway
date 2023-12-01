@@ -1,10 +1,23 @@
 server:
   port: 8080
 
+# debug: true
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+
 spring:
+  main:
+    allow-circular-references: true
+  #   allow-bean-definition-overriding: true
   application:
     name: store-gateway
   cloud:
+    discovery:
+      enabled: true
     gateway:
       routes:
 
@@ -23,9 +36,24 @@ spring:
           predicates:
             - Path=/order/**
 
+        - id: auth
+          uri: lb://store-auth
+          predicates:
+            - Path=/auth/**
+
 eureka:
   client:
-    registerWithEureka: true
-    fetchRegistry: true
-    serviceUrl:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
       defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}
+api:
+  endpoints:
+    open: >
+      POST /auth/register/,
+      POST /auth/login/
+
+store:
+  jwt:
+    issuer: store
+    secret-key: hIiyhhEj2pNhV2p3Mk6tFhjiG4RObrhEhIiyhhEj2pNhV2p3Mk6tFhjiG4RObrhEhIiyhhEj2pNhV2p3Mk6tFhjiG4RObrhE
