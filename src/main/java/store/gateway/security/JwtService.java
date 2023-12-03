@@ -1,4 +1,4 @@
-package store.gateway;
+package store.gateway.security;
 
 import java.util.Date;
 

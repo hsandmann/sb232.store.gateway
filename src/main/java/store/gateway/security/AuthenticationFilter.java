@@ -1,8 +1,6 @@
 package store.gateway.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.http.HttpStatus;
@@ -11,12 +9,7 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
-import io.jsonwebtoken.Claims;
 import reactor.core.publisher.Mono;
-import store.auth.AuthController;
-import store.auth.IdIn;
-import store.auth.IdOut;
-import store.gateway.JwtService;
 
 @Component
 public class AuthenticationFilter implements GlobalFilter {
@@ -27,8 +20,8 @@ public class AuthenticationFilter implements GlobalFilter {
     @Autowired
     private RouterValidator routerValidator;
 
-    @Autowired
-    private AuthController authController;
+    // @Autowired
+    // private AuthController authController;
 
     @Autowired
     private JwtService jwtService;
@@ -45,13 +38,8 @@ public class AuthenticationFilter implements GlobalFilter {
                 return this.onError(exchange, HttpStatus.FORBIDDEN);                
             }
             final String token = parts[1];
-            // authController.login(new LoginIn("gma@espm.br", "123456789"));
-            // final IdOut idOut = authController.id(new IdIn(token));
-            // if (idOut == null) {
-            //     return this.onError(exchange, HttpStatus.FORBIDDEN);                
-            // }
-            // final String id = idOut.id();
             final String id = jwtService.getId(token);
+            // final String id = id(token).id();
             this.updateRequest(exchange, id);
             return chain.filter(exchange);
         }
@@ -77,5 +65,15 @@ public class AuthenticationFilter implements GlobalFilter {
                 .header("id-user", id)
                 .build();
     }
+
+    // private IdOut id(String token) { 
+    //     RestClient restClient = RestClient.create();
+    //     return restClient.post()
+    //         .uri("http://store-auth/auth/id")
+    //         .accept(MediaType.APPLICATION_JSON)
+    //         .body(new IdIn(token))
+    //         .retrieve()
+    //         .body(IdOut.class);
+    // }
 
 }

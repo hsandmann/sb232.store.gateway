@@ -12,7 +12,6 @@ logging:
 spring:
   main:
     allow-circular-references: true
-  #   allow-bean-definition-overriding: true
   application:
     name: store-gateway
   cloud:
@@ -47,6 +46,7 @@ eureka:
     fetch-registry: true
     service-url:
       defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}
+      
 api:
   endpoints:
     open: >
