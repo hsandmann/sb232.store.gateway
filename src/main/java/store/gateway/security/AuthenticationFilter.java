@@ -5,8 +5,8 @@ import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 
 import reactor.core.publisher.Mono;
@@ -35,21 +35,14 @@ public class AuthenticationFilter implements GlobalFilter {
         if (!isAuthMissing(request)) {
             final String[] parts = this.getAuthHeader(request).split(" ");
             if (parts.length != 2 || !parts[0].equals(HEADER_BEARER)) {
-                return this.onError(exchange, HttpStatus.FORBIDDEN);                
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Authorization header format must be Bearer {token}");
             }
             final String token = parts[1];
             final String id = jwtService.getId(token);
-            // final String id = id(token).id();
             this.updateRequest(exchange, id);
             return chain.filter(exchange);
         }
-        return this.onError(exchange, HttpStatus.UNAUTHORIZED);
-    }
-
-    private Mono<Void> onError(ServerWebExchange exchange, HttpStatus httpStatus) {
-        ServerHttpResponse response = exchange.getResponse();
-        response.setStatusCode(httpStatus);
-        return response.setComplete();
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing authorization header");
     }
 
     private String getAuthHeader(ServerHttpRequest request) {
@@ -65,15 +58,5 @@ public class AuthenticationFilter implements GlobalFilter {
                 .header("id-user", id)
                 .build();
     }
-
-    // private IdOut id(String token) { 
-    //     RestClient restClient = RestClient.create();
-    //     return restClient.post()
-    //         .uri("http://store-auth/auth/id")
-    //         .accept(MediaType.APPLICATION_JSON)
-    //         .body(new IdIn(token))
-    //         .retrieve()
-    //         .body(IdOut.class);
-    // }
 
 }
