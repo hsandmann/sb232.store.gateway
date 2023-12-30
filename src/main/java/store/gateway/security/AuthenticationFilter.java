@@ -3,13 +3,18 @@ package store.gateway.security;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.server.ServerWebExchange;
 
 import reactor.core.publisher.Mono;
+import store.auth.IdIn;
+import store.auth.IdOut;
 
 @Component
 public class AuthenticationFilter implements GlobalFilter {
@@ -20,11 +25,8 @@ public class AuthenticationFilter implements GlobalFilter {
     @Autowired
     private RouterValidator routerValidator;
 
-    // @Autowired
-    // private AuthController authController;
-
     @Autowired
-    private JwtService jwtService;
+    private WebClient.Builder webClient;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
@@ -38,9 +40,22 @@ public class AuthenticationFilter implements GlobalFilter {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Authorization header format must be Bearer {token}");
             }
             final String token = parts[1];
-            final String id = jwtService.getId(token);
-            this.updateRequest(exchange, id);
-            return chain.filter(exchange);
+            return webClient
+                .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .build()
+                .post()
+                .uri("http://store-auth/auth/id/")
+                .bodyValue(new IdIn(token))
+                .retrieve()
+                .toEntity(IdOut.class)
+                .flatMap(response -> {
+                    if (response != null && response.getBody() != null) {
+                        this.updateRequest(exchange, response.getBody().id());
+                        return chain.filter(exchange);
+                    } else {
+                        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token");
+                    }
+                });
         }
         throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing authorization header");
     }

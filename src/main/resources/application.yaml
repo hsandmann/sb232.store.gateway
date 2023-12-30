@@ -1,8 +1,6 @@
 server:
   port: 8080
 
-# debug: true
-
 logging:
   level:
     org:
@@ -16,7 +14,8 @@ spring:
     name: store-gateway
   cloud:
     discovery:
-      enabled: true
+      locator:
+        enabled: true
     gateway:
       routes:
 
@@ -52,8 +51,3 @@ api:
     open: >
       POST /auth/register/,
       POST /auth/login/
-
-store:
-  jwt:
-    issuer: store
-    secret-key: hIiyhhEj2pNhV2p3Mk6tFhjiG4RObrhEhIiyhhEj2pNhV2p3Mk6tFhjiG4RObrhEhIiyhhEj2pNhV2p3Mk6tFhjiG4RObrhE
