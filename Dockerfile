@@ -1,4 +1,4 @@
-FROM openjdk:23-slim-bullseye
+FROM openjdk:23-slim
 VOLUME /tmp
 ARG JAR_FILE=target/*.jar
 COPY ${JAR_FILE} app.jar
